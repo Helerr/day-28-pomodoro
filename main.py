@@ -11,21 +11,26 @@ WORK_MIN = 25
 SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
 REPS = 0
-reps_checkmarks = ""
+timer = None
 
 
 # ---------------------------- TIMER RESET ------------------------------- #
 
+def reset_timer():
+    global REPS, timer
+    checkmarks_label.config(text="")
+    canvas.itemconfig(timer_text, text="00:00")
+    REPS = 0
+    timer_label.config(text="Timer", fg=GREEN)
+    window.after_cancel(timer)
+
 # ---------------------------- TIMER MECHANISM ------------------------------- # 
 def start_timer():
-    global REPS, reps_checkmarks
+    global REPS
     REPS += 1
-    # work_sec = WORK_MIN * 60
-    # short_break_sec = SHORT_BREAK_MIN * 60
-    # long_break_sec = LONG_BREAK_MIN * 60
-    work_sec = 10
-    short_break_sec = 5
-    long_break_sec = 7
+    work_sec = WORK_MIN * 60
+    short_break_sec = SHORT_BREAK_MIN * 60
+    long_break_sec = LONG_BREAK_MIN * 60
     if REPS % 8 == 0:
         count_down(long_break_sec)
         timer_label.config(text="Long Break", fg=RED)
@@ -35,14 +40,14 @@ def start_timer():
     else:
         count_down(work_sec)
         timer_label.config(text="Work", fg=GREEN)
-        reps_checkmarks += "✔"
-        checkmarks_label.config(text=reps_checkmarks)
+
 
 
 # ---------------------------- COUNTDOWN MECHANISM ------------------------------- #
 
 
 def count_down(count):
+    global REPS, timer
     count_min = math.floor(count / 60)
     count_sec = count % 60
     if count_sec < 10:
@@ -51,12 +56,14 @@ def count_down(count):
         count_min = f"0{count_min}"
     canvas.itemconfig(timer_text, text=f"{count_min}:{count_sec}")
     if count > 0:
-        print(count)
-        window.after(1000, count_down, count - 1)
+        timer = window.after(1000, count_down, count - 1)
     else:
         start_timer()
-
-
+        mark = ""
+        work_sessions = range(math.floor(REPS/2))
+        for _ in work_sessions:
+            mark += "✔"
+        checkmarks_label.config(text=mark)
 # ---------------------------- UI SETUP ------------------------------- #
 
 window = Tk()
@@ -76,10 +83,10 @@ timer_label.grid(row=0, column=1)
 start_button = Button(text="Start", highlightbackground=YELLOW, command=start_timer)
 start_button.grid(row=2, column=0)
 
-checkmarks_label = Label(fg=GREEN, text="✔", font=(FONT_NAME, 24, "bold"), background=YELLOW)
+checkmarks_label = Label(fg=GREEN, text="", font=(FONT_NAME, 24, "bold"), background=YELLOW)
 checkmarks_label.grid(row=3, column=1)
 
-reset_button = Button(text="Reset", highlightbackground=YELLOW)
+reset_button = Button(text="Reset", highlightbackground=YELLOW, command=reset_timer)
 reset_button.grid(row=2, column=2)
 
 window.mainloop()
